@@ -56,8 +56,9 @@ namespace deflect
 
 const unsigned short Socket::defaultPortNumber = DEFAULT_PORT_NUMBER;
 
-Socket::Socket( const std::string& hostname, const unsigned short port )
-    : _socket( new QTcpSocket( ))
+Socket::Socket( const std::string& host, const unsigned short port )
+    : _host( host )
+    , _socket( new QTcpSocket( ))
     , _remoteProtocolVersion( INVALID_NETWORK_PROTOCOL_VERSION )
 {
     // disable warnings which occur if no QCoreApplication is present during
@@ -69,7 +70,7 @@ Socket::Socket( const std::string& hostname, const unsigned short port )
         log->setEnabled( QtWarningMsg, false );
     }
 
-    _connect( hostname, port );
+    _connect( host, port );
 
     QObject::connect( _socket, &QTcpSocket::disconnected,
                       this, &Socket::disconnected );
@@ -78,6 +79,11 @@ Socket::Socket( const std::string& hostname, const unsigned short port )
 Socket::~Socket()
 {
     delete _socket;
+}
+
+const std::string& Socket::getHost() const
+{
+    return _host;
 }
 
 bool Socket::isConnected() const
@@ -113,30 +119,33 @@ bool Socket::send( const MessageHeader& messageHeader,
     if( stream.status() != QDataStream::Ok )
         return false;
 
-    if( message.isEmpty( ))
-        return true;
+    bool allSent = true;
+    if( !message.isEmpty( ))
+    {
+        // Send message data
+        const char* data = message.constData();
+        const int size = message.size();
 
-    // Send message data
-    const char* data = message.constData();
-    const int size = message.size();
+        int sent = _socket->write( data, size );
 
-    int sent = _socket->write( data, size );
+        while( sent < size && isConnected( ))
+            sent += _socket->write( data + sent, size - sent );
 
-    while( sent < size && isConnected( ))
-        sent += _socket->write( data + sent, size - sent );
+        allSent = sent == size;
+    }
 
     // Needed in the absence of event loop, otherwise the reception is frozen.
     while( _socket->bytesToWrite() > 0 && isConnected( ))
         _socket->waitForBytesWritten();
 
-    return sent == size;
+    return allSent;
 }
 
 bool Socket::receive( MessageHeader& messageHeader, QByteArray& message )
 {
     QMutexLocker locker( &_socketMutex );
 
-    if ( !_receiveHeader( messageHeader ))
+    if( !_receiveHeader( messageHeader ))
         return false;
 
     // get the message
@@ -182,17 +191,17 @@ bool Socket::_receiveHeader( MessageHeader& messageHeader )
     return stream.status() == QDataStream::Ok;
 }
 
-bool Socket::_connect( const std::string& hostname, const unsigned short port )
+bool Socket::_connect( const std::string& host, const unsigned short port )
 {
     // make sure we're disconnected
     _socket->disconnectFromHost();
 
     // open connection
-    _socket->connectToHost( hostname.c_str(), port );
+    _socket->connectToHost( host.c_str(), port );
 
     if( !_socket->waitForConnected( RECEIVE_TIMEOUT_MS ))
     {
-        std::cerr << "could not connect to host " << hostname << ":" << port
+        std::cerr << "could not connect to host " << host << ":" << port
                   << std::endl;
         return false;
     }
@@ -201,7 +210,7 @@ bool Socket::_connect( const std::string& hostname, const unsigned short port )
     if( _checkProtocolVersion( ))
         return true;
 
-    std::cerr << "Protocol version check failed for host: " << hostname << ":"
+    std::cerr << "Protocol version check failed for host: " << host << ":"
               << port << std::endl;
     _socket->disconnectFromHost();
     return false;

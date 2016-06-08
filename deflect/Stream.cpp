@@ -1,5 +1,5 @@
 /*********************************************************************/
-/* Copyright (c) 2013-2015, EPFL/Blue Brain Project                  */
+/* Copyright (c) 2013-2016, EPFL/Blue Brain Project                  */
 /*                          Raphael Dumusc <raphael.dumusc@epfl.ch>  */
 /*                          Stefan.Eilemann@epfl.ch                  */
 /*                          Daniel.Nachbaur@epfl.ch                  */
@@ -54,10 +54,27 @@
 namespace deflect
 {
 
-Stream::Stream( const std::string& name, const std::string& address,
-                const unsigned short port )
-    : _impl( new StreamPrivate( this, name, address, port ))
+Stream::Stream()
+    : _impl( new StreamPrivate( "", "", Socket::defaultPortNumber ))
 {
+    if( isConnected( ))
+    {
+        _impl->socket.connect( &_impl->socket, &Socket::disconnected,
+                               [this]() { disconnected(); });
+        _impl->sendOpen();
+    }
+}
+
+Stream::Stream( const std::string& id, const std::string& host,
+                const unsigned short port )
+    : _impl( new StreamPrivate( id, host, port ))
+{
+    if( isConnected( ))
+    {
+        _impl->socket.connect( &_impl->socket, &Socket::disconnected,
+                               [this]() { disconnected(); });
+        _impl->sendOpen();
+    }
 }
 
 Stream::~Stream()
@@ -67,6 +84,16 @@ Stream::~Stream()
 bool Stream::isConnected() const
 {
     return _impl->socket.isConnected();
+}
+
+const std::string& Stream::getId() const
+{
+    return _impl->id;
+}
+
+const std::string& Stream::getHost() const
+{
+    return _impl->socket.getHost();
 }
 
 bool Stream::send( const ImageWrapper& image )
@@ -98,7 +125,7 @@ bool Stream::registerForEvents( const bool exclusive )
 
     const MessageType type = exclusive ? MESSAGE_TYPE_BIND_EVENTS_EX :
                                          MESSAGE_TYPE_BIND_EVENTS;
-    MessageHeader mh( type, 0, _impl->name );
+    MessageHeader mh( type, 0, _impl->id );
 
     // Send the bind message
     if( !_impl->socket.send( mh, QByteArray( )))
@@ -160,11 +187,6 @@ Event Stream::getEvent()
 void Stream::sendSizeHints( const SizeHints& hints )
 {
     _impl->sendSizeHints( hints );
-}
-
-void Stream::sendCommand( const std::string& command )
-{
-    _impl->sendCommand( QString::fromStdString( command ));
 }
 
 }

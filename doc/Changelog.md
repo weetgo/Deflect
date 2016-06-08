@@ -1,13 +1,31 @@
 Changelog {#Changelog}
 ============
 
-## Deflect 0.10
+## Deflect 0.11
 
-### git master (0.10.2)
+### 0.11.0 (git master)
+
+* [102](https://github.com/BlueBrain/Deflect/pull/102):
+  DeflectQt: Continue rendering & streaming after updates for a while to
+  compensate for running animations, fix spurious missing event handling  
+* [100](https://github.com/BlueBrain/Deflect/pull/100):
+  QmlStreamer: correcly quit application when stream is closed.
+* [99](https://github.com/BlueBrain/Deflect/pull/99):
+  Fix incomplete socket send under certain timing conditions
+* [98](https://github.com/BlueBrain/Deflect/pull/98):
+  Streams can be constructed based on the DEFLECT_ID and DEFLECT_HOST ENV_VARs.
+* [95](https://github.com/BlueBrain/Deflect/pull/95):
+  DesktopStreamer: the list of windows available for streaming is also updated
+  after a window has been hidden or unhidden.
+* [94](https://github.com/BlueBrain/Deflect/pull/94):
+  Removed legacy SendCommand functionality from Stream to Server. It was only
+  used internally by the old Tide Dock streamer and never meant to be public.
 * [93](https://github.com/BlueBrain/Deflect/pull/93):
   Minor fixes for the Qml stream API:
   - Cleanup size handling, allow programmatic resizing of root Qml item
   - Do not send a size hints event if none were set by the user
+
+## Deflect 0.10
 
 ### 0.10.1 (01-04-2016)
 * [79](https://github.com/BlueBrain/Deflect/pull/79):

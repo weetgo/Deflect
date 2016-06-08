@@ -71,7 +71,7 @@ class QmlStreamer::Impl : public QWindow
 
 public:
     Impl( const QString& qmlFile, const std::string& streamHost,
-          const std::string& streamName );
+          const std::string& streamId );
 
     ~Impl();
 
@@ -82,6 +82,7 @@ protected:
     void resizeEvent( QResizeEvent* e ) final;
     void mousePressEvent( QMouseEvent* e ) final;
     void mouseReleaseEvent( QMouseEvent* e ) final;
+    void timerEvent( QTimerEvent* e ) final;
 
 private slots:
     bool _setupRootItem();
@@ -89,7 +90,7 @@ private slots:
     void _createFbo();
     void _destroyFbo();
     void _render();
-    void _requestUpdate();
+    void _requestRender();
 
     void _onPressed( double, double );
     void _onReleased( double, double );
@@ -97,8 +98,11 @@ private slots:
     void _onResized( double, double );
     void _onWheeled( double, double, double );
 
+signals:
+    void streamClosed();
+
 private:
-    std::string _getDeflectStreamName() const;
+    std::string _getDeflectStreamIdentifier() const;
     bool _setupDeflectStream();
     void _updateSizes( const QSize& size );
 
@@ -110,13 +114,15 @@ private:
     QQmlComponent* _qmlComponent;
     QQuickItem* _rootItem;
     QOpenGLFramebufferObject* _fbo;
-    QTimer _updateTimer;
+
+    int _renderTimer;
+    int _stopRenderingDelayTimer;
 
     Stream* _stream;
     EventReceiver* _eventHandler;
     bool _streaming;
     const std::string _streamHost;
-    const std::string _streamName;
+    const std::string _streamId;
     SizeHints _sizeHints;
 };
 

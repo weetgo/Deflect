@@ -51,8 +51,7 @@
 #include "Stream.h" // Stream::Future
 
 #include <string>
-
-class QString;
+#include <memory>
 
 namespace deflect
 {
@@ -62,28 +61,27 @@ class StreamSendWorker;
 /**
  * Private implementation for the Stream class.
  */
-class StreamPrivate : public QObject
+class StreamPrivate
 {
-    Q_OBJECT
-
 public:
     /**
      * Create a new stream and open a new connection to the deflect::Server.
      *
-     * It can be a hostname like "localhost" or an IP in string format,
-     * e.g. "192.168.1.83" This method must be called by all Streams sharing a
-     * common identifier before any of them starts sending images.
-     *
-     * @param stream the parent object owning this object
-     * @param name the unique stream name
-     * @param address Address of the target Server instance.
+     * @param id the unique stream identifier
+     * @param host Address of the target Server instance.
      * @param port Port of the target Server instance.
      */
-    StreamPrivate( Stream* stream, const std::string& name,
-                   const std::string& address, const unsigned short port );
+    StreamPrivate( const std::string& id, const std::string& host,
+                   unsigned short port );
 
     /** Destructor, close the Stream. */
     ~StreamPrivate();
+
+    /** Send the open message to the server. */
+    void sendOpen();
+
+    /** Send the quit message to the server. */
+    void sendClose();
 
     /**
      * Close the stream.
@@ -101,10 +99,8 @@ public:
     bool finishFrame();
 
     /**
-     * Send an existing PixelStreamSegment via the Socket.
-     * @param socket The Socket instance
-     * @param segment A pixel stream segement with valid parameters and imageData
-     * @param senderName Used to identifiy the sender on the receiver side
+     * Send a Segment through the Stream.
+     * @param segment An image segment with valid parameters and data
      * @return true if the message could be sent
      */
     DEFLECT_API bool sendPixelStreamSegment( const Segment& segment );
@@ -112,15 +108,8 @@ public:
     /** @sa Stream::sendSizeHints */
     bool sendSizeHints( const SizeHints& hints );
 
-    /**
-     * Send a command to the wall
-     * @param command A command string formatted by the Command class.
-     * @return true if the request could be sent, false otherwise.
-     */
-    bool sendCommand( const QString& command );
-
     /** The stream identifier. */
-    const std::string name;
+    const std::string id;
 
     /** The communication socket instance */
     Socket socket;
@@ -131,12 +120,8 @@ public:
     /** Has a successful event registration reply been received */
     bool registeredForEvents;
 
-private slots:
-    void _onDisconnected();
-
 private:
-    Stream* _parent;
-    StreamSendWorker* _sendWorker;
+    std::unique_ptr< StreamSendWorker > _sendWorker;
 };
 
 }

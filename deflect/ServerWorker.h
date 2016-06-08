@@ -1,5 +1,5 @@
 /*********************************************************************/
-/* Copyright (c) 2013-2015, EPFL/Blue Brain Project                  */
+/* Copyright (c) 2013-2016, EPFL/Blue Brain Project                  */
 /*                          Raphael Dumusc <raphael.dumusc@epfl.ch>  */
 /*                          Daniel.Nachbaur@epfl.ch                  */
 /* All rights reserved.                                              */
@@ -79,8 +79,6 @@ signals:
     void registerToEvents( QString uri, bool exclusive,
                            deflect::EventReceiver* receiver);
 
-    void receivedCommand( QString command, QString senderUri );
-
     void receivedSizeHints( QString uri, deflect::SizeHints hints );
 
     void connectionClosed();
@@ -94,7 +92,7 @@ private slots:
 private:
     QTcpSocket* _tcpSocket;
 
-    QString _streamUri;
+    QString _streamId;
     int _sourceId;
 
     bool _registeredToEvents;

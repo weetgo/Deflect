@@ -53,7 +53,7 @@
 
 namespace
 {
-const std::string DEFAULT_STREAM_NAME( "QmlStreamer" );
+const std::string DEFAULT_STREAM_ID( "QmlStreamer" );
 }
 
 class RenderControl : public QQuickRenderControl
@@ -80,7 +80,7 @@ namespace qt
 {
 
 QmlStreamer::Impl::Impl( const QString& qmlFile, const std::string& streamHost,
-                         const std::string& streamName )
+                         const std::string& streamId )
     : QWindow()
     , _context( new QOpenGLContext )
     , _offscreenSurface( new QOffscreenSurface )
@@ -93,11 +93,13 @@ QmlStreamer::Impl::Impl( const QString& qmlFile, const std::string& streamHost,
     , _qmlComponent( new QQmlComponent( _qmlEngine, QUrl( qmlFile )))
     , _rootItem( nullptr )
     , _fbo( nullptr )
+    , _renderTimer( 0 )
+    , _stopRenderingDelayTimer( 0 )
     , _stream( nullptr )
     , _eventHandler( nullptr )
     , _streaming( false )
     , _streamHost( streamHost )
-    , _streamName( streamName )
+    , _streamId( streamId )
 {
     setSurfaceType( QSurface::OpenGLSurface );
 
@@ -121,14 +123,6 @@ QmlStreamer::Impl::Impl( const QString& qmlFile, const std::string& streamHost,
     if( !_qmlEngine->incubationController( ))
         _qmlEngine->setIncubationController( _quickWindow->incubationController( ));
 
-    // When Quick says there is a need to render, we will not render
-    // immediately. Instead, a timer with a small interval is used to get better
-    // performance.
-    _updateTimer.setSingleShot( true );
-    _updateTimer.setInterval( 5 );
-    connect( &_updateTimer, &QTimer::timeout,
-             this, &QmlStreamer::Impl::_render );
-
     // Now hook up the signals. For simplicy we don't differentiate between
     // renderRequested (only render is needed, no sync) and sceneChanged (polish
     // and sync is needed too).
@@ -137,9 +131,9 @@ QmlStreamer::Impl::Impl( const QString& qmlFile, const std::string& streamHost,
     connect( _quickWindow, &QQuickWindow::sceneGraphInvalidated,
              this, &QmlStreamer::Impl::_destroyFbo );
     connect( _renderControl, &QQuickRenderControl::renderRequested,
-             this, &QmlStreamer::Impl::_requestUpdate );
+             this, &QmlStreamer::Impl::_requestRender );
     connect( _renderControl, &QQuickRenderControl::sceneChanged,
-             this, &QmlStreamer::Impl::_requestUpdate );
+             this, &QmlStreamer::Impl::_requestRender );
 
     // remote URL to QML components are loaded asynchronously
     if( _qmlComponent->isLoading( ))
@@ -202,6 +196,9 @@ void QmlStreamer::Impl::_render()
             qWarning() << "Could not setup Deflect stream";
     }
 
+    if( !_streaming )
+        return;
+
     // Polish, synchronize and render the next frame (into our fbo). In this
     // example everything happens on the same thread and therefore all three
     // steps are performed in succession from here. In a threaded setup the
@@ -215,12 +212,6 @@ void QmlStreamer::Impl::_render()
 
     _context->functions()->glFlush();
 
-    if( !_streaming )
-    {
-        QCoreApplication::quit();
-        return;
-    }
-
     const QImage image = _fbo->toImage();
     if( image.isNull( ))
     {
@@ -233,11 +224,26 @@ void QmlStreamer::Impl::_render()
     imageWrapper.compressionPolicy = COMPRESSION_ON;
     imageWrapper.compressionQuality = 100;
     _streaming = _stream->send( imageWrapper ) && _stream->finishFrame();
+
+    if( !_streaming )
+    {
+        killTimer( _renderTimer );
+        killTimer( _stopRenderingDelayTimer );
+        emit streamClosed();
+        return;
+    }
+
+    if( _stopRenderingDelayTimer == 0 )
+        _stopRenderingDelayTimer = startTimer( 5000 /*ms*/ );
 }
 
-void QmlStreamer::Impl::_requestUpdate()
+void QmlStreamer::Impl::_requestRender()
 {
-    _updateTimer.start();
+    killTimer( _stopRenderingDelayTimer );
+    _stopRenderingDelayTimer = 0;
+
+    if( _renderTimer == 0 )
+        _renderTimer = startTimer( 5, Qt::PreciseTimer );
 }
 
 void QmlStreamer::Impl::_onPressed( double x_, double y_ )
@@ -328,22 +334,25 @@ bool QmlStreamer::Impl::_setupRootItem()
     return true;
 }
 
-std::string QmlStreamer::Impl::_getDeflectStreamName() const
+std::string QmlStreamer::Impl::_getDeflectStreamIdentifier() const
 {
-    if( !_streamName.empty( ))
-        return _streamName;
+    if( !_streamId.empty( ))
+        return _streamId;
 
-    const std::string streamName = _rootItem->objectName().toStdString();
-    return streamName.empty() ? DEFAULT_STREAM_NAME : streamName;
+    const std::string streamId = _rootItem->objectName().toStdString();
+    return streamId.empty() ? DEFAULT_STREAM_ID : streamId;
 }
 
 bool QmlStreamer::Impl::_setupDeflectStream()
 {
     if( !_stream )
-        _stream = new Stream( _getDeflectStreamName(), _streamHost );
+        _stream = new Stream( _getDeflectStreamIdentifier(), _streamHost );
 
     if( !_stream->isConnected( ))
         return false;
+
+    _stream->disconnected.connect(
+                boost::bind( &QmlStreamer::Impl::streamClosed, this ));
 
     if( !_stream->registerForEvents( ))
         return false;
@@ -411,6 +420,19 @@ void QmlStreamer::Impl::mouseReleaseEvent( QMouseEvent* e )
     QMouseEvent mappedEvent( e->type(), e->localPos(), e->screenPos(),
                              e->button(), e->buttons(), e->modifiers( ));
     QCoreApplication::sendEvent( _quickWindow, &mappedEvent );
+}
+
+void QmlStreamer::Impl::timerEvent( QTimerEvent* e )
+{
+    if( e->timerId() == _renderTimer )
+        _render();
+    else if( e->timerId() == _stopRenderingDelayTimer )
+    {
+        killTimer( _renderTimer );
+        killTimer( _stopRenderingDelayTimer );
+        _renderTimer = 0;
+        _stopRenderingDelayTimer = 0;
+    }
 }
 
 }
