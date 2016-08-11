@@ -49,8 +49,6 @@
 
 #include <iostream>
 
-#include <boost/thread/thread.hpp>
-
 #include <QHostInfo>
 
 namespace
@@ -177,6 +175,12 @@ bool StreamPrivate::sendSizeHints( const SizeHints& hints )
     QByteArray message;
     message.append( (const char*)( &hints ), sizeof( hints ) );
     return socket.send( mh, message );
+}
+
+bool StreamPrivate::send( const QByteArray data )
+{
+    const MessageHeader mh( MESSAGE_TYPE_DATA, data.size(), id );
+    return socket.send( mh, data );
 }
 
 }

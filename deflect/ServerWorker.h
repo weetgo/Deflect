@@ -81,6 +81,8 @@ signals:
 
     void receivedSizeHints( QString uri, deflect::SizeHints hints );
 
+    void receivedData( QString uri, QByteArray data );
+
     void connectionClosed();
 
     /** @internal */
@@ -112,6 +114,7 @@ private:
     void _sendQuit();
     bool _send( const MessageHeader& messageHeader );
     void _flushSocket();
+    bool _isConnected() const;
 };
 
 }

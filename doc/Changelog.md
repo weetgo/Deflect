@@ -1,20 +1,60 @@
 Changelog {#Changelog}
 ============
 
+## Deflect 0.12
+
+### 0.12.0 (git master)
+
+* [119](https://github.com/BlueBrain/Deflect/pull/119):
+  Added deflect::Stream::sendData() to allow sending user-defined information
+  to the deflect::Server.
+* [118](https://github.com/BlueBrain/Deflect/pull/118):
+  New "pan" event for multi-finger pan gestures.
+* [117](https://github.com/BlueBrain/Deflect/pull/117):
+  Fix several issues with stream connection / disconnection [DISCL-375]
+* [115](https://github.com/BlueBrain/Deflect/pull/115):
+  Bugfix for possible endless loop of warnings in ServerWorker::_flushSocket():
+  "QAbstractSocket::waitForBytesWritten() is not allowed in UnconnectedState"
+* [114](https://github.com/BlueBrain/Deflect/pull/114):
+  QmlStreamer: added support for keyboard events
+
 ## Deflect 0.11
 
-### 0.11.0 (git master)
+### 0.11.1 (30-06-2016)
 
+* [112](https://github.com/BlueBrain/Deflect/pull/112):
+  DesktopStreamer improvements:
+  - new "view" menu to show advanced options (stream id, fps), hidden by default
+  - the experimental multi-window streaming on OSX can be selected at runtime
+    through the view menu (no longer a CMake option)
+  - improved resizing policy of the main window
+
+### 0.11.0 (17-06-2016)
+
+* [111](https://github.com/BlueBrain/Deflect/pull/111):
+  DesktopStreamer: bugfix; stop streaming when the server closes the stream
+  and the "remote control" option was not enabled.
+* [110](https://github.com/BlueBrain/Deflect/pull/110):
+  DesktopStreamer: Support for streaming multiple windows on OSX disabled by
+  default, can be enabled with cmake -DDESKTOPSTREAMER_ENABLE_MULTIWINDOW=ON.
+* [106](https://github.com/BlueBrain/Deflect/pull/106):
+  DesktopStreamer: Rename 'interaction' -> 'remote control', off by default.
+* [103](https://github.com/BlueBrain/Deflect/pull/103):
+  DesktopStreamer: prevent AppNap of being re-enabled automatically
 * [102](https://github.com/BlueBrain/Deflect/pull/102):
   DeflectQt: Continue rendering & streaming after updates for a while to
-  compensate for running animations, fix spurious missing event handling  
+  compensate for running animations, fix spurious missing event handling
+* [101](https://github.com/BlueBrain/Deflect/pull/101):
+  DesktopStreamer: windows that are streamed independently are activated
+  (i.e. sent to the foreground) before applying an interaction event. The mouse
+  cursor is now rendered only on active windows or desktop.
 * [100](https://github.com/BlueBrain/Deflect/pull/100):
   QmlStreamer: correcly quit application when stream is closed.
 * [99](https://github.com/BlueBrain/Deflect/pull/99):
   Fix incomplete socket send under certain timing conditions
 * [98](https://github.com/BlueBrain/Deflect/pull/98):
   Streams can be constructed based on the DEFLECT_ID and DEFLECT_HOST ENV_VARs.
-* [95](https://github.com/BlueBrain/Deflect/pull/95):
+* [97](https://github.com/BlueBrain/Deflect/pull/97):
   DesktopStreamer: the list of windows available for streaming is also updated
   after a window has been hidden or unhidden.
 * [94](https://github.com/BlueBrain/Deflect/pull/94):

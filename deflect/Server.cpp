@@ -88,6 +88,15 @@ Server::Server( const int port )
 
 Server::~Server()
 {
+    for( QObject* child : children())
+    {
+        if( QThread* workerThread = qobject_cast<QThread*>( child ))
+        {
+            workerThread->quit();
+            workerThread->wait();
+        }
+    }
+
     delete _impl;
 }
 
@@ -129,6 +138,8 @@ void Server::incomingConnection( const qintptr socketHandle )
              this, &Server::registerToEvents );
     connect( worker, &ServerWorker::receivedSizeHints,
              this, &Server::receivedSizeHints );
+    connect( worker, &ServerWorker::receivedData,
+             this, &Server::receivedData );
     connect( this, &Server::_pixelStreamerClosed,
              worker, &ServerWorker::closeConnection );
     connect( this, &Server::_eventRegistrationReply,

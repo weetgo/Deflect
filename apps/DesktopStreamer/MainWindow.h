@@ -1,5 +1,7 @@
 /*********************************************************************/
-/* Copyright (c) 2011 - 2012, The University of Texas at Austin.     */
+/* Copyright (c) 2011-2012, The University of Texas at Austin.       */
+/* Copyright (c) 2013-2016, EPFL/Blue Brain Project                  */
+/*                     Raphael Dumusc <raphael.dumusc@epfl.ch>       */
 /* All rights reserved.                                              */
 /*                                                                   */
 /* Redistribution and use in source and binary forms, with or        */
@@ -36,8 +38,8 @@
 /* or implied, of The University of Texas at Austin.                 */
 /*********************************************************************/
 
-#ifndef MAIN_WINDOW_H
-#define MAIN_WINDOW_H
+#ifndef MAINWINDOW_H
+#define MAINWINDOW_H
 
 #include <apps/DesktopStreamer/ui_MainWindow.h>
 
@@ -90,9 +92,19 @@ private:
     AppNapSuspender _napSuspender;
 #endif
 
+    void _showMultiWindowMode();
+    void _showSingleWindowMode();
+
+    void _showRemoteControl( bool visible );
+    void _showAdvancedSettings( bool visible );
+
     void _startStreaming();
     void _stopStreaming();
     void _updateStreams();
+    void _updateMultipleStreams();
+    void _updateSingleStream();
+    void _showConnectionErrorStatus();
+
     void _deselect( ConstStreamPtr stream );
     void _processStreamEvents();
     void _shareDesktopUpdate();
