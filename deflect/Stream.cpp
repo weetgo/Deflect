@@ -49,6 +49,7 @@
 
 #include <QDataStream>
 
+#include <cassert>
 #include <iostream>
 
 namespace deflect
@@ -56,26 +57,12 @@ namespace deflect
 
 Stream::Stream()
     : _impl( new StreamPrivate( "", "", Socket::defaultPortNumber ))
-{
-    if( isConnected( ))
-    {
-        _impl->socket.connect( &_impl->socket, &Socket::disconnected,
-                               [this]() { disconnected(); });
-        _impl->sendOpen();
-    }
-}
+{}
 
 Stream::Stream( const std::string& id, const std::string& host,
                 const unsigned short port )
     : _impl( new StreamPrivate( id, host, port ))
-{
-    if( isConnected( ))
-    {
-        _impl->socket.connect( &_impl->socket, &Socket::disconnected,
-                               [this]() { disconnected(); });
-        _impl->sendOpen();
-    }
-}
+{}
 
 Stream::~Stream()
 {
@@ -115,8 +102,8 @@ bool Stream::registerForEvents( const bool exclusive )
 {
     if( !isConnected( ))
     {
-        std::cerr << "Stream is not connected, registerForEvents failed"
-                  << std::endl;
+        std::cerr << "deflect::Stream::registerForEvents: Stream is not "
+                  << "connected, operation failed" << std::endl;
         return false;
     }
 
@@ -130,20 +117,26 @@ bool Stream::registerForEvents( const bool exclusive )
     // Send the bind message
     if( !_impl->socket.send( mh, QByteArray( )))
     {
-        std::cerr << "Could not send bind message" << std::endl;
+        std::cerr << "deflect::Stream::registerForEvents: sending bind message "
+                  << "failed" << std::endl;
         return false;
     }
 
     // Wait for bind reply
     QByteArray message;
-    const bool success = _impl->socket.receive( mh, message );
-    if( !success || mh.type != MESSAGE_TYPE_BIND_EVENTS_REPLY )
+    if( !_impl->socket.receive( mh, message ))
     {
-        std::cerr << "Invalid reply from host" << std::endl;
+        std::cerr << "deflect::Stream::registerForEvents: receive bind reply "
+                  << "failed" << std::endl;
         return false;
     }
-
-    _impl->registeredForEvents= *(bool*)(message.data());
+    if( mh.type != MESSAGE_TYPE_BIND_EVENTS_REPLY )
+    {
+        std::cerr << "deflect::Stream::registerForEvents: received unexpected "
+                  << "message type (" << int(mh.type) << ")" << std::endl;
+        return false;
+    }
+    _impl->registeredForEvents = *(bool*)(message.data());
 
     return isRegisteredForEvents();
 }
@@ -167,10 +160,15 @@ Event Stream::getEvent()
 {
     MessageHeader mh;
     QByteArray message;
-    const bool success = _impl->socket.receive( mh, message );
-    if( !success || mh.type != MESSAGE_TYPE_EVENT )
+    if( !_impl->socket.receive( mh, message ))
     {
-        std::cerr << "Invalid reply from host" << std::endl;
+        std::cerr << "deflect::Stream::getEvent: receive failed" << std::endl;
+        return Event();
+    }
+    if( mh.type != MESSAGE_TYPE_EVENT )
+    {
+        std::cerr << "deflect::Stream::getEvent: received unexpected message "
+                  << "type (" << int(mh.type) << ")" << std::endl;
         return Event();
     }
 
@@ -187,6 +185,11 @@ Event Stream::getEvent()
 void Stream::sendSizeHints( const SizeHints& hints )
 {
     _impl->sendSizeHints( hints );
+}
+
+void Stream::setDisconnectedCallback( const std::function<void()> callback )
+{
+    _impl->disconnectedCallback = callback;
 }
 
 bool Stream::sendData( const char* data, const size_t count )

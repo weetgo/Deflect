@@ -1,6 +1,7 @@
 /*********************************************************************/
-/* Copyright (c) 2015, EPFL/Blue Brain Project                       */
+/* Copyright (c) 2015-2016, EPFL/Blue Brain Project                  */
 /*                     Daniel.Nachbaur <daniel.nachbaur@epfl.ch>     */
+/*                     Raphael Dumusc <raphael.dumusc@epfl.ch>       */
 /* All rights reserved.                                              */
 /*                                                                   */
 /* Redistribution and use in source and binary forms, with or        */
@@ -41,6 +42,8 @@
 #define EVENTRECEIVER_H
 
 #include <QObject>
+#include <QPointF>
+#include <QSize>
 #include <QSocketNotifier>
 #include <QTimer>
 
@@ -60,13 +63,23 @@ public:
     ~EventReceiver();
 
 signals:
-    void pressed( double x, double y );
-    void released( double x, double y );
-    void moved( double x, double y );
-    void resized( double x, double y );
-    void wheeled( double x, double y, double dy );
+    void pressed( QPointF position );
+    void released( QPointF position );
+    void moved( QPointF position );
+
+    void resized( QSize newSize );
+
     void keyPress( int key, int modifiers, QString text );
     void keyRelease( int key, int modifiers, QString text );
+
+    void swipeLeft();
+    void swipeRight();
+    void swipeUp();
+    void swipeDown();
+
+    void touchPointAdded( int id, QPointF position );
+    void touchPointUpdated( int id, QPointF position );
+    void touchPointRemoved( int id, QPointF position );
 
 private slots:
     void _onEvent( int socket );

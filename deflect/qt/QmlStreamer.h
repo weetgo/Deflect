@@ -59,6 +59,18 @@ namespace qt
  * This class renders the given QML file in an offscreen fashion and streams
  * on each update on the given Deflect stream. It automatically register also
  * for Deflect events, which can be directly handled in the QML.
+
+ * Users can make connections to the "deflectgestures" context property to react
+ * to certain gestures received as Event, currently swipe[Left|Right|Up|Down].
+ *
+ * When using a WebEngineView, users must call QtWebEngine::initialize() in the
+ * QApplication before creating the streamer. Also, due to a limitiation in Qt,
+ * the objectName property of any WebEngineView must be set to "webengineview".
+ * This is necessary for it to receive keyboard events and to correct the
+ * default behaviour of the tapAndHold gesture. Deflect will prevent the opening
+ * of an on-screen context menu (which may crash the application) and instead
+ * switch to a "mouse" interaction mode. This allows users to interact within
+ * a WebGL canevas or select text instead of scrolling the page.
  */
 class QmlStreamer : public QObject
 {
@@ -86,6 +98,14 @@ public:
 
     /** @return the QML engine. */
     DEFLECTQT_API QQmlEngine* getQmlEngine();
+
+    /**
+     * Send data to the Server.
+     *
+     * @param data the data buffer
+     * @return true if the data could be sent, false otherwise
+     */
+    DEFLECTQT_API bool sendData( QByteArray data );
 
 signals:
     /** Emitted when the stream has been closed. */

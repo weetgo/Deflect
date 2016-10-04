@@ -1,5 +1,5 @@
 /*********************************************************************/
-/* Copyright (c) 2013, EPFL/Blue Brain Project                       */
+/* Copyright (c) 2016, EPFL/Blue Brain Project                       */
 /*                     Raphael Dumusc <raphael.dumusc@epfl.ch>       */
 /* All rights reserved.                                              */
 /*                                                                   */
@@ -34,47 +34,37 @@
 /* The views and conclusions contained in the software and           */
 /* documentation are those of the authors and should not be          */
 /* interpreted as representing official policies, either expressed   */
-/* or implied, of The University of Texas at Austin.                 */
+/* or implied, of Ecole polytechnique federale de Lausanne.          */
 /*********************************************************************/
 
-#define BOOST_TEST_MODULE SegmentParametersTests
-#include <boost/test/unit_test.hpp>
-namespace ut = boost::unit_test;
+#ifndef TIMER_H
+#define TIMER_H
 
-#include <deflect/SegmentParameters.h>
+#include <chrono>
 
-#include <iostream>
-#include <boost/archive/binary_oarchive.hpp>
-#include <boost/archive/binary_iarchive.hpp>
-
-BOOST_AUTO_TEST_CASE( testSegementParametersSerialization )
+class Timer
 {
-    deflect::SegmentParameters params;
-    params.x = 212;
-    params.y = 365;
-    params.height = 32;
-    params.width = 78;
-    params.compressed = false;
+public:
+    using clock = std::chrono::high_resolution_clock;
 
-
-    // serialize
-    std::stringstream stream;
+    void start()
     {
-        boost::archive::binary_oarchive oa( stream );
-        oa << params;
+        _startTime = clock::now();
     }
 
-    // deserialize
-    deflect::SegmentParameters paramsDeserialized;
+    void restart()
     {
-        boost::archive::binary_iarchive ia( stream );
-        ia >> paramsDeserialized;
+        start();
     }
 
-    BOOST_CHECK_EQUAL( params.x, paramsDeserialized.x );
-    BOOST_CHECK_EQUAL( params.y, paramsDeserialized.y );
-    BOOST_CHECK_EQUAL( params.height, paramsDeserialized.height );
-    BOOST_CHECK_EQUAL( params.width, paramsDeserialized.width );
-    BOOST_CHECK_EQUAL( params.compressed, paramsDeserialized.compressed );
-}
+    float elapsed()
+    {
+        const auto now = clock::now();
+        return std::chrono::duration<float>{ now - _startTime }.count();
+    }
 
+private:
+    clock::time_point _startTime;
+};
+
+#endif

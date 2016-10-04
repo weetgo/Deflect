@@ -5,6 +5,37 @@ Changelog {#Changelog}
 
 ### 0.12.0 (git master)
 
+* [130](https://github.com/BlueBrain/Deflect/pull/130)
+  Replaced boost by C++11. Boost is now an optional dependency and it is used
+  only by the tests. Some API changes were introduced by this change.
+* [129](https://github.com/BlueBrain/Deflect/pull/129)
+  Cleared Deflect from boost::serialization that was used exclusively by Tide.
+* [128](https://github.com/BlueBrain/Deflect/pull/128)
+  New events for transmitting all touch points in addition to existing gestures:
+  - Gives the ability to handle more than one touch point in applications (e.g.
+    draw with multiple fingers on a whiteboard).
+  - Simplifies integration for applications that natively handle multitouch
+    events, like Qml-based ones.
+  - DeflectQt uses a new TouchInjector class for sending touch events to Qt
+    (moved from Tide).
+  In addition:
+  - A new *pinch* event was added. Clients of Tide >= 1.2 have to adapt their
+    code to use it instead of *wheel* events, which are no longer sent.
+  - Minor additions to the simplestreamer demo application.
+* [126](https://github.com/BlueBrain/Deflect/pull/126)
+  DesktopStreamer: The list of default hosts can be configured using the CMake
+  variable DEFLECT_DESKTOPSTREAMER_HOSTS.
+* [124](https://github.com/BlueBrain/Deflect/pull/124):
+  QmlStreamer: Users can now interact with WebGL content in a WebEngineView
+  and no longer risk opening a system context menu with a long press (prevent
+  crashes in certain offscreen applications).
+* [123](https://github.com/BlueBrain/Deflect/pull/123):
+  QmlStreamer is now compatible with Qml WebEngineView items. Users must call
+  QtWebEngine::initialize() in their QApplication before creating the stream.
+  To receive keyboard events, the objectName property of a WebEngineView must
+  be set to "webengineview".
+  QmlStreamer also exposes the Stream::sendData() function and swipe gestures
+  are available in Qml from a "deflectgestures" context property.
 * [119](https://github.com/BlueBrain/Deflect/pull/119):
   Added deflect::Stream::sendData() to allow sending user-defined information
   to the deflect::Server.

@@ -1,8 +1,6 @@
 /*********************************************************************/
-/* Copyright (c) 2013-2015, EPFL/Blue Brain Project                  */
+/* Copyright (c) 2016, EPFL/Blue Brain Project                       */
 /*                     Raphael Dumusc <raphael.dumusc@epfl.ch>       */
-/*                     Stefan.Eilemann@epfl.ch                       */
-/*                     Daniel.Nachbaur@epfl.ch                       */
 /* All rights reserved.                                              */
 /*                                                                   */
 /* Redistribution and use in source and binary forms, with or        */
@@ -39,96 +37,79 @@
 /* or implied, of The University of Texas at Austin.                 */
 /*********************************************************************/
 
-#ifndef DEFLECT_STREAMPRIVATE_H
-#define DEFLECT_STREAMPRIVATE_H
+#ifndef TOUCHINJECTOR_H
+#define TOUCHINJECTOR_H
 
-#include <deflect/api.h>
-
-#include "Event.h"
-#include "MessageHeader.h"
-#include "ImageSegmenter.h"
-#include "Socket.h" // member
-#include "Stream.h" // Stream::Future
+#include <QObject>
+#include <QTouchEvent>
 
 #include <functional>
-#include <string>
-#include <memory>
 
 namespace deflect
 {
-
-class StreamSendWorker;
+namespace qt
+{
 
 /**
- * Private implementation for the Stream class.
+ * Inject complete QTouchEvent from separate touch added/updated/removed events.
  */
-class StreamPrivate
+class TouchInjector : public QObject
 {
+    Q_OBJECT
+    Q_DISABLE_COPY( TouchInjector )
+
 public:
+    /** Function to map normalized coordinates to scene / window coordinates. */
+    using MapToSceneFunc = std::function<QPointF(const QPointF&)>;
+
     /**
-     * Create a new stream and open a new connection to the deflect::Server.
+     * Constructor.
+     * @param target the target QObject that should receive the touch events
+     * @param mapFunc the function to generate scene / window coordinates
+     */
+    TouchInjector( QObject& target, MapToSceneFunc mapFunc );
+
+    /**
+     * Insert a new touch point.
      *
-     * @param id the unique stream identifier
-     * @param host Address of the target Server instance.
-     * @param port Port of the target Server instance.
+     * Does nothing if a point with the same id already exists.
+     * @param id the identifier for the point
+     * @param position the initial normalized position of the point
      */
-    StreamPrivate( const std::string& id, const std::string& host,
-                   unsigned short port );
-
-    /** Destructor, close the Stream. */
-    ~StreamPrivate();
-
-    /** Send the open message to the server. */
-    void sendOpen();
-
-    /** Send the quit message to the server. */
-    void sendClose();
+    void addTouchPoint( int id, QPointF position );
 
     /**
-     * Close the stream.
-     * @return true on success or if the Stream was not connected
+     * Update an existing touch point.
+     *
+     * Does nothing if the given point has not been added or was removed.
+     * @param id the identifier for the point
+     * @param position the new normalized position of the point
      */
-    bool close();
-
-    /** @sa Stream::send */
-    bool send( const ImageWrapper& image );
-
-    /** @sa Stream::asyncSend */
-    Stream::Future asyncSend( const ImageWrapper& image );
-
-    /** @sa Stream::finishFrame */
-    bool finishFrame();
+    void updateTouchPoint( int id, QPointF position );
 
     /**
-     * Send a Segment through the Stream.
-     * @param segment An image segment with valid parameters and data
-     * @return true if the message could be sent
+     * Remove an existing touch point.
+     *
+     * Does nothing if the given point has not been added or was removed.
+     * @param id the identifier for the point
+     * @param position the new normalized position of the point
      */
-    DEFLECT_API bool sendPixelStreamSegment( const Segment& segment );
+    void removeTouchPoint( int id, QPointF position );
 
-    /** @sa Stream::sendSizeHints */
-    bool sendSizeHints( const SizeHints& hints );
-
-    /** Send a user-defined block of data to the server. */
-    bool send( QByteArray data );
-
-    /** The stream identifier. */
-    const std::string id;
-
-    /** The communication socket instance */
-    Socket socket;
-
-    /** The image segmenter */
-    ImageSegmenter imageSegmenter;
-
-    /** Has a successful event registration reply been received */
-    bool registeredForEvents;
-
-    std::function<void()> disconnectedCallback;
+    /** Remove all touch points. */
+    void removeAllTouchPoints();
 
 private:
-    std::unique_ptr< StreamSendWorker > _sendWorker;
+    void _handleEvent( const int id, const QPointF& normalizedPos,
+                       const QEvent::Type eventType );
+
+    QObject& _target;
+    MapToSceneFunc _mapToSceneFunction;
+    QTouchDevice _device;
+    QMap<int, QTouchEvent::TouchPoint> _touchPointMap;
 };
 
 }
+}
+
 #endif

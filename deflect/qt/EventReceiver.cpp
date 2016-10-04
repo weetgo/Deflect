@@ -1,6 +1,7 @@
 /*********************************************************************/
-/* Copyright (c) 2015, EPFL/Blue Brain Project                       */
+/* Copyright (c) 2015-2016, EPFL/Blue Brain Project                  */
 /*                     Daniel.Nachbaur <daniel.nachbaur@epfl.ch>     */
+/*                     Raphael Dumusc <raphael.dumusc@epfl.ch>       */
 /* All rights reserved.                                              */
 /*                                                                   */
 /* Redistribution and use in source and binary forms, with or        */
@@ -62,8 +63,11 @@ EventReceiver::EventReceiver( Stream& stream )
     _timer->start( 1 );
 }
 
-EventReceiver::~EventReceiver()
+EventReceiver::~EventReceiver() {}
+
+inline QPointF _pos( const Event& deflectEvent )
 {
+    return QPointF{ deflectEvent.mouseX, deflectEvent.mouseY };
 }
 
 void EventReceiver::_onEvent( int socket )
@@ -82,28 +86,29 @@ void EventReceiver::_onEvent( int socket )
             QCoreApplication::quit();
             break;
         case Event::EVT_PRESS:
-            emit pressed( deflectEvent.mouseX, deflectEvent.mouseY );
+            emit pressed( _pos( deflectEvent ));
             break;
         case Event::EVT_RELEASE:
-            emit released( deflectEvent.mouseX, deflectEvent.mouseY );
+            emit released( _pos( deflectEvent ));
             break;
         case Event::EVT_MOVE:
-            emit moved( deflectEvent.mouseX, deflectEvent.mouseY );
+            emit moved( _pos( deflectEvent ));
             break;
         case Event::EVT_VIEW_SIZE_CHANGED:
-            emit resized( deflectEvent.dx, deflectEvent.dy );
+            emit resized( QSize{ int(deflectEvent.dx), int(deflectEvent.dy) } );
             break;
-        case Event::EVT_WHEEL:
-            emit wheeled( deflectEvent.mouseX, deflectEvent.mouseY,
-                          deflectEvent.dy );
-            break;
-
-        case Event::EVT_CLICK:
-        case Event::EVT_DOUBLECLICK:
         case Event::EVT_SWIPE_LEFT:
+            emit swipeLeft();
+            break;
         case Event::EVT_SWIPE_RIGHT:
+            emit swipeRight();
+            break;
         case Event::EVT_SWIPE_UP:
+            emit swipeUp();
+            break;
         case Event::EVT_SWIPE_DOWN:
+            emit swipeDown();
+            break;
         case Event::EVT_KEY_PRESS:
             emit keyPress( deflectEvent.key, deflectEvent.modifiers,
                            QString::fromStdString( deflectEvent.text ));
@@ -112,6 +117,19 @@ void EventReceiver::_onEvent( int socket )
             emit keyRelease( deflectEvent.key, deflectEvent.modifiers,
                              QString::fromStdString( deflectEvent.text ));
             break;
+        case Event::EVT_TOUCH_ADD:
+            emit touchPointAdded( deflectEvent.key, _pos( deflectEvent ));
+            break;
+        case Event::EVT_TOUCH_UPDATE:
+            emit touchPointUpdated( deflectEvent.key, _pos( deflectEvent ));
+            break;
+        case Event::EVT_TOUCH_REMOVE:
+            emit touchPointRemoved( deflectEvent.key, _pos( deflectEvent ));
+            break;
+        case Event::EVT_CLICK:
+        case Event::EVT_DOUBLECLICK:
+        case Event::EVT_PINCH:
+        case Event::EVT_WHEEL:
         default:
             break;
         }
