@@ -38,8 +38,8 @@
 /* or implied, of The University of Texas at Austin.                 */
 /*********************************************************************/
 
-#ifndef EVENTRECEIVER_H
-#define EVENTRECEIVER_H
+#ifndef DELFECT_QT_EVENTRECEIVER_H
+#define DELFECT_QT_EVENTRECEIVER_H
 
 #include <QObject>
 #include <QPointF>
@@ -53,43 +53,42 @@ namespace deflect
 {
 namespace qt
 {
-
 class EventReceiver : public QObject
 {
     Q_OBJECT
 
 public:
-    EventReceiver( Stream& stream );
+    EventReceiver(Stream& stream);
     ~EventReceiver();
 
 signals:
-    void pressed( QPointF position );
-    void released( QPointF position );
-    void moved( QPointF position );
+    void pressed(QPointF position);
+    void released(QPointF position);
+    void moved(QPointF position);
 
-    void resized( QSize newSize );
+    void resized(QSize newSize);
+    void closed();
 
-    void keyPress( int key, int modifiers, QString text );
-    void keyRelease( int key, int modifiers, QString text );
+    void keyPress(int key, int modifiers, QString text);
+    void keyRelease(int key, int modifiers, QString text);
 
     void swipeLeft();
     void swipeRight();
     void swipeUp();
     void swipeDown();
 
-    void touchPointAdded( int id, QPointF position );
-    void touchPointUpdated( int id, QPointF position );
-    void touchPointRemoved( int id, QPointF position );
-
-private slots:
-    void _onEvent( int socket );
+    void touchPointAdded(int id, QPointF position);
+    void touchPointUpdated(int id, QPointF position);
+    void touchPointRemoved(int id, QPointF position);
 
 private:
     Stream& _stream;
-    std::unique_ptr< QSocketNotifier > _notifier;
-    std::unique_ptr< QTimer > _timer;
-};
+    std::unique_ptr<QSocketNotifier> _notifier;
+    std::unique_ptr<QTimer> _timer;
 
+    void _onEvent(int socket);
+    void _stop();
+};
 }
 }
 

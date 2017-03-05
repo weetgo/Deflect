@@ -37,8 +37,8 @@
 /* or implied, of Ecole polytechnique federale de Lausanne.          */
 /*********************************************************************/
 
-#ifndef QMLGESTURES_H
-#define QMLGESTURES_H
+#ifndef DELFECT_QT_QMLGESTURES_H
+#define DELFECT_QT_QMLGESTURES_H
 
 #include <QObject>
 
@@ -46,7 +46,6 @@ namespace deflect
 {
 namespace qt
 {
-
 /**
  * Expose gesture events as a Qml context property object.
  */
@@ -60,7 +59,6 @@ signals:
     void swipeUp();
     void swipeDown();
 };
-
 }
 }
 

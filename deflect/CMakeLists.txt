@@ -1,13 +1,12 @@
 
-# Copyright (c) 2013-2016, EPFL/Blue Brain Project
-#                     Raphael Dumusc <raphael.dumusc@epfl.ch>
-#                     Daniel Nachbaur <daniel.nachbaur@epfl.ch>
+# Copyright (c) 2013-2017, EPFL/Blue Brain Project
+#                          Raphael Dumusc <raphael.dumusc@epfl.ch>
+#                          Daniel Nachbaur <daniel.nachbaur@epfl.ch>
 
 set(DEFLECT_PUBLIC_HEADERS
   config.h
   Event.h
   EventReceiver.h
-  FrameDispatcher.h
   Frame.h
   ImageWrapper.h
   MTQueue.h
@@ -20,12 +19,14 @@ set(DEFLECT_PUBLIC_HEADERS
 )
 
 set(DEFLECT_HEADERS
+  FrameDispatcher.h
   ImageSegmenter.h
   MessageHeader.h
   NetworkProtocol.h
   ReceiveBuffer.h
   ServerWorker.h
   Socket.h
+  SourceBuffer.h
   StreamPrivate.h
 )
 
@@ -41,12 +42,19 @@ set(DEFLECT_SOURCES
   Server.cpp
   ServerWorker.cpp
   Socket.cpp
+  SourceBuffer.cpp
   Stream.cpp
   StreamPrivate.cpp
   StreamSendWorker.cpp
 )
 
 set(DEFLECT_LINK_LIBRARIES PRIVATE Qt5::Concurrent Qt5::Core Qt5::Network)
+
+if(APPLE)
+  list(APPEND DEFLECT_PUBLIC_HEADERS AppNapSuspender.h)
+  list(APPEND DEFLECT_SOURCES AppNapSuspender.mm)
+  list(APPEND DEFLECT_LINK_LIBRARIES PRIVATE "-framework Foundation")
+endif()
 
 if(DEFLECT_USE_LIBJPEGTURBO)
   list(APPEND DEFLECT_PUBLIC_HEADERS
@@ -62,10 +70,6 @@ if(DEFLECT_USE_LIBJPEGTURBO)
     SegmentDecoder.cpp
   )
   list(APPEND DEFLECT_LINK_LIBRARIES ${LibJpegTurbo_LIBRARIES})
-endif()
-
-if(DEFLECT_USE_SERVUS)
-  list(APPEND DEFLECT_LINK_LIBRARIES Servus)
 endif()
 
 common_library(Deflect)

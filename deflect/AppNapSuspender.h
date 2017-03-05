@@ -37,9 +37,11 @@
 /* or implied, of The Ecole Polytechnique Federale de Lausanne.      */
 /*********************************************************************/
 
-#ifndef APPNAPSUSPENDER_H
-#define APPNAPSUSPENDER_H
+#ifndef DEFLECT_APPNAPSUSPENDER_H
+#define DEFLECT_APPNAPSUSPENDER_H
 
+namespace deflect
+{
 /**
  * Suspend AppNap on OSX >= 10.9.
  */
@@ -62,5 +64,6 @@ private:
     class Impl;
     Impl* _impl;
 };
+}
 
-#endif // APPNAPSUSPENDER_H
+#endif

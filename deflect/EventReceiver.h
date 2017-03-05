@@ -41,26 +41,24 @@
 #define DEFLECT_EVENTRECEIVER_H
 
 #include <deflect/Event.h>
+#include <deflect/api.h>
 
 #include <QObject>
 
 namespace deflect
 {
-
 /**
  * Interface for classes to register as receivers for events.
  */
-class EventReceiver : public QObject
+class DEFLECT_API EventReceiver : public QObject
 {
     Q_OBJECT
 
 public:
     virtual ~EventReceiver() {}
-
 public slots:
-    virtual void processEvent( deflect::Event event ) = 0;
+    virtual void processEvent(deflect::Event event) = 0;
 };
-
 }
 
 #endif

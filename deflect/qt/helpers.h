@@ -1,6 +1,6 @@
 /*********************************************************************/
-/* Copyright (c) 2014-2015, EPFL/Blue Brain Project                  */
-/*                          Raphael Dumusc <raphael.dumusc@epfl.ch>  */
+/* Copyright (c) 2016, EPFL/Blue Brain Project                       */
+/*                     Raphael Dumusc <raphael.dumusc@epfl.ch>       */
 /* All rights reserved.                                              */
 /*                                                                   */
 /* Redistribution and use in source and binary forms, with or        */
@@ -34,66 +34,35 @@
 /* The views and conclusions contained in the software and           */
 /* documentation are those of the authors and should not be          */
 /* interpreted as representing official policies, either expressed   */
-/* or implied, of The University of Texas at Austin.                 */
+/* or implied, of Ecole polytechnique federale de Lausanne.          */
 /*********************************************************************/
 
-#include "AppNapSuspender.h"
+#ifndef DELFECT_QT_HELPERS_H
+#define DELFECT_QT_HELPERS_H
 
-#include <Foundation/NSProcessInfo.h>
+#include <future>
+#include <memory>
 
-// We check at runtime if beginActivityWithOptions and endActivity
-// are available so that we can also compile using OSX SDK < 10.9
-#pragma clang diagnostic ignored "-Wobjc-method-access"
+namespace deflect
+{
+namespace qt
+{
+template <typename T>
+std::future<T> make_ready_future(const T value)
+{
+    std::promise<T> promise;
+    promise.set_value(value);
+    return promise.get_future();
+}
 
-#ifdef __MAC_OS_X_VERSION_MAX_ALLOWED
-#if __MAC_OS_X_VERSION_MAX_ALLOWED < 1090
-// NSActivityUserInitiated is undefined when compiling with OSX SDK < 10.9
-#define NSActivityUserInitiated (0x00FFFFFFULL | (1ULL << 20))
+// missing make_unique() implementation in C++11 standard
+// source: http://herbsutter.com/gotw/_102/
+template <typename T, typename... Args>
+std::unique_ptr<T> make_unique(Args&&... args)
+{
+    return std::unique_ptr<T>(new T(std::forward<Args>(args)...));
+}
+}
+}
+
 #endif
-#endif
-
-class AppNapSuspender::Impl
-{
-public:
-    Impl()
-        : activityId( nil )
-    {}
-
-    id<NSObject> activityId;
-};
-
-AppNapSuspender::AppNapSuspender() :
-    _impl( new Impl )
-{
-}
-
-AppNapSuspender::~AppNapSuspender()
-{
-    resume();
-    delete _impl;
-}
-
-void AppNapSuspender::suspend()
-{
-    if( _impl->activityId )
-        return;
-
-    if( [[NSProcessInfo processInfo] respondsToSelector:@selector(beginActivityWithOptions:reason:)] )
-    {
-        _impl->activityId = [[NSProcessInfo processInfo] beginActivityWithOptions: NSActivityUserInitiated reason:@"Good reason"];
-        [_impl->activityId retain];
-    }
-}
-
-void AppNapSuspender::resume()
-{
-    if( !_impl->activityId )
-        return;
-
-    if( [[NSProcessInfo processInfo] respondsToSelector:@selector(endActivity:)] )
-    {
-        [[NSProcessInfo processInfo] endActivity:_impl->activityId];
-        [_impl->activityId release];
-        _impl->activityId = nil;
-    }
-}

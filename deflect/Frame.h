@@ -1,5 +1,5 @@
 /*********************************************************************/
-/* Copyright (c) 2014-2016, EPFL/Blue Brain Project                  */
+/* Copyright (c) 2014-2017, EPFL/Blue Brain Project                  */
 /*                          Raphael Dumusc <raphael.dumusc@epfl.ch>  */
 /* All rights reserved.                                              */
 /*                                                                   */
@@ -40,16 +40,15 @@
 #ifndef DEFLECT_FRAME_H
 #define DEFLECT_FRAME_H
 
+#include <deflect/Segment.h>
 #include <deflect/api.h>
 #include <deflect/types.h>
-#include <deflect/Segment.h>
 
 #include <QSize>
 #include <QString>
 
 namespace deflect
 {
-
 /**
  * A frame for a PixelStream.
  */
@@ -62,10 +61,12 @@ public:
     /** The PixelStream uri to which this frame is associated. */
     QString uri;
 
+    /** The view to which this frame belongs. */
+    View view = View::mono;
+
     /** Get the total dimensions of this frame. */
     DEFLECT_API QSize computeDimensions() const;
 };
-
 }
 
 #endif

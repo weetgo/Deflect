@@ -1,6 +1,6 @@
 /*********************************************************************/
-/* Copyright (c) 2013, EPFL/Blue Brain Project                       */
-/*                     Raphael Dumusc <raphael.dumusc@epfl.ch>       */
+/* Copyright (c) 2013-2017, EPFL/Blue Brain Project                  */
+/*                          Raphael Dumusc <raphael.dumusc@epfl.ch>  */
 /* All rights reserved.                                              */
 /*                                                                   */
 /* Redistribution and use in source and binary forms, with or        */
@@ -42,6 +42,7 @@
 
 #include <cstddef>
 #include <deflect/api.h>
+#include <deflect/types.h>
 
 namespace deflect
 {
@@ -50,13 +51,22 @@ namespace deflect
  *  Formats are 8 bits per channel unless specified otherwise.
  *  @version 1.0
  */
-enum PixelFormat { RGB, RGBA, ARGB, BGR, BGRA, ABGR };
+enum PixelFormat
+{
+    RGB,
+    RGBA,
+    ARGB,
+    BGR,
+    BGRA,
+    ABGR
+};
 
 /** Image compression policy */
-enum CompressionPolicy {
-    COMPRESSION_AUTO,  /**< Implementation specific */
-    COMPRESSION_ON,    /**< Force enable */
-    COMPRESSION_OFF    /**< Force disable */
+enum CompressionPolicy
+{
+    COMPRESSION_AUTO, /**< Implementation specific */
+    COMPRESSION_ON,   /**< Force enable */
+    COMPRESSION_OFF   /**< Force disable */
 };
 
 /**
@@ -86,18 +96,17 @@ struct ImageWrapper
      * @version 1.0
      */
     DEFLECT_API
-    ImageWrapper( const void* data, const unsigned int width,
-                  const unsigned int height, const PixelFormat format,
-                  const unsigned int x = 0, const unsigned int y = 0 );
+    ImageWrapper(const void* data, unsigned int width, unsigned int height,
+                 PixelFormat format, unsigned int x = 0, unsigned int y = 0);
 
     /** Pointer to the image data of size getBufferSize(). @version 1.0 */
     const void* const data;
 
     /** @name Dimensions */
     //@{
-    const unsigned int width;   /**< The image width in pixels. @version 1.0 */
-    const unsigned int height;  /**< The image height in pixels. @version 1.0 */
-    //@}
+    const unsigned int width;  /**< The image width in pixels. @version 1.0 */
+    const unsigned int height; /**< The image height in pixels. @version 1.0 */
+                               //@}
 
     /**
      * The pixel format describing the arrangement of the data buffer.
@@ -107,18 +116,24 @@ struct ImageWrapper
 
     /** @name Position of the image in the stream */
     //@{
-    const unsigned int x;  /**< The X coordinate. @version 1.0 */
-    const unsigned int y;  /**< The Y coordinate. @version 1.0 */
+    const unsigned int x; /**< The X coordinate. @version 1.0 */
+    const unsigned int y; /**< The Y coordinate. @version 1.0 */
     //@}
 
     /** @name Compression parameters */
     //@{
-    CompressionPolicy compressionPolicy;  /**< Is the image to be compressed
-                                               (default: auto). @version 1.0 */
-    unsigned int compressionQuality;      /**< Compression quality (0 worst,
-                                               100 best, default: 75).
-                                               @version 1.0 */
+    CompressionPolicy compressionPolicy; /**< Is the image to be compressed
+                                              (default: auto). @version 1.0 */
+    unsigned int compressionQuality;     /**< Compression quality (0 worst,
+                                              100 best, default: 75).
+                                              @version 1.0 */
     //@}
+
+    /**
+     * The view that this image represents.
+     * @version 1.6
+     */
+    View view = View::mono;
 
     /**
      * Get the number of bytes per pixel based on the pixelFormat.
@@ -144,11 +159,10 @@ struct ImageWrapper
      * @param bpp The number of bytes per pixel (RGB=3, ARGB=4, etc.)
      * @version 1.0
      */
-    DEFLECT_API static void swapYAxis( void* data, const unsigned int width,
-                                       const unsigned int height,
-                                       const unsigned int bpp );
+    DEFLECT_API static void swapYAxis(void* data, const unsigned int width,
+                                      const unsigned int height,
+                                      const unsigned int bpp);
 };
-
 }
 
 #endif

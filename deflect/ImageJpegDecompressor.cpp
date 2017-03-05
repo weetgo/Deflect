@@ -43,47 +43,39 @@
 
 namespace deflect
 {
-
 ImageJpegDecompressor::ImageJpegDecompressor()
-    : _tjHandle( tjInitDecompress( ))
+    : _tjHandle(tjInitDecompress())
 {
 }
 
 ImageJpegDecompressor::~ImageJpegDecompressor()
 {
-    tjDestroy( _tjHandle );
+    tjDestroy(_tjHandle);
 }
 
-QByteArray ImageJpegDecompressor::decompress( const QByteArray& jpegData )
+QByteArray ImageJpegDecompressor::decompress(const QByteArray& jpegData)
 {
     // get information from header
     int width, height, jpegSubsamp;
-    int err = tjDecompressHeader2( _tjHandle, (unsigned char*)jpegData.data(),
-                                   (unsigned long)jpegData.size(), &width,
-                                   &height, &jpegSubsamp );
-    if( err != 0 )
-    {
-        std::cerr << "libjpeg-turbo header decompression failure" << std::endl;
-        return QByteArray();
-    }
+    int err = tjDecompressHeader2(_tjHandle, (unsigned char*)jpegData.data(),
+                                  (unsigned long)jpegData.size(), &width,
+                                  &height, &jpegSubsamp);
+    if (err != 0)
+        throw std::runtime_error("libjpeg-turbo header decompression failed");
 
     // decompress image data
     int pixelFormat = TJPF_RGBX; // Format for OpenGL texture (GL_RGBA)
     int pitch = width * tjPixelSize[pixelFormat];
     int flags = TJ_FASTUPSAMPLE;
-    QByteArray decodedData( height * pitch, Qt::Uninitialized );
+    QByteArray decodedData(height * pitch, Qt::Uninitialized);
 
-    err = tjDecompress2( _tjHandle, (unsigned char*)jpegData.data(),
-                         (unsigned long)jpegData.size(),
-                         (unsigned char*)decodedData.data(),
-                         width, pitch, height, pixelFormat, flags );
-    if( err != 0 )
-    {
-        std::cerr << "libjpeg-turbo image decompression failure" << std::endl;
-        return QByteArray();
-    }
+    err = tjDecompress2(_tjHandle, (unsigned char*)jpegData.data(),
+                        (unsigned long)jpegData.size(),
+                        (unsigned char*)decodedData.data(), width, pitch,
+                        height, pixelFormat, flags);
+    if (err != 0)
+        throw std::runtime_error("libjpeg-turbo image decompression failed");
 
     return decodedData;
 }
-
 }

@@ -1,9 +1,10 @@
 
-# Copyright (c) 2013-2015, EPFL/Blue Brain Project
-#                     Raphael Dumusc <raphael.dumusc@epfl.ch>
+# Copyright (c) 2013-2017, EPFL/Blue Brain Project
+#                          Raphael Dumusc <raphael.dumusc@epfl.ch>
 
 set(DESKTOPSTREAMER_HEADERS
   MainWindow.h
+  nameUtils.h
   Stream.h
 )
 
@@ -34,10 +35,6 @@ set_source_files_properties(MainWindow.cpp PROPERTIES COMPILE_DEFINITIONS
   _HOSTS=${DEFLECT_DESKTOPSTREAMER_HOSTS}
 )
 
-if(DEFLECT_USE_SERVUS)
-  list(APPEND DESKTOPSTREAMER_LINK_LIBRARIES Servus)
-endif()
-
 set(DESKTOPSTREAMER_APP_NAME desktopstreamer)
 
 if(APPLE)
@@ -46,8 +43,9 @@ if(APPLE)
   set(DESKTOPSTREAMER_COPYRIGHT "EPFL/Blue Brain Project ${_CURRENT_YEAR}")
   set(DESKTOPSTREAMER_ICON desktopstreamer.icns)
 
-  list(APPEND DESKTOPSTREAMER_SOURCES AppNapSuspender.mm)
+  list(APPEND DESKTOPSTREAMER_SOURCES nameUtils.mm)
   list(APPEND DESKTOPSTREAMER_LINK_LIBRARIES "-framework Foundation")
+
   if(TARGET Qt5::MacExtras)
     list(APPEND DESKTOPSTREAMER_HEADERS DesktopWindowsModel.h)
     list(APPEND DESKTOPSTREAMER_SOURCES DesktopWindowsModel.mm)
@@ -60,7 +58,11 @@ if(APPLE)
   else()
     list(APPEND DESKTOPSTREAMER_LINK_LIBRARIES "-framework CoreGraphics")
   endif()
-elseif(MSVC)
+else()
+  list(APPEND DESKTOPSTREAMER_SOURCES nameUtils.cpp)
+endif()
+
+if(MSVC)
   list(APPEND DESKTOPSTREAMER_LINK_LIBRARIES Ws2_32)
 endif()
 

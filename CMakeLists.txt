@@ -1,11 +1,11 @@
 
-# Copyright (c) 2013-2016, EPFL/Blue Brain Project
+# Copyright (c) 2013-2017, EPFL/Blue Brain Project
 #                          Raphael Dumusc <raphael.dumusc@epfl.ch>
 #                          Daniel Nachbaur <daniel.nachbaur@epfl.ch>
 
 cmake_minimum_required(VERSION 3.1 FATAL_ERROR)
-project(Deflect VERSION 0.12.0)
-set(Deflect_VERSION_ABI 5)
+project(Deflect VERSION 0.13.0)
+set(Deflect_VERSION_ABI 6)
 
 list(APPEND CMAKE_MODULE_PATH ${PROJECT_SOURCE_DIR}/CMake
                               ${CMAKE_SOURCE_DIR}/CMake/common)
@@ -17,7 +17,7 @@ set(DEFLECT_LICENSE BSD)
 set(DEFLECT_DEB_DEPENDS freeglut3-dev libxi-dev libxmu-dev
   libjpeg-turbo8-dev libturbojpeg
   libboost-program-options-dev libboost-test-dev
-  qtbase5-dev qtbase5-private-dev qtdeclarative5-dev)
+  qtbase5-dev qtdeclarative5-dev)
 set(DEFLECT_PORT_DEPENDS boost freeglut qt5)
 
 include(Common)
@@ -28,7 +28,6 @@ common_find_package(LibJpegTurbo REQUIRED)
 common_find_package(OpenGL)
 common_find_package(Qt5Concurrent REQUIRED SYSTEM)
 common_find_package(Qt5Core REQUIRED)
-common_find_package(Qt5Gui COMPONENTS Private) # For Qml WebEngineView
 if(APPLE)
   common_find_package(Qt5MacExtras)
 endif()
@@ -36,8 +35,11 @@ common_find_package(Qt5Network REQUIRED)
 common_find_package(Qt5Qml)
 common_find_package(Qt5Quick)
 common_find_package(Qt5Widgets REQUIRED)
-common_find_package(Servus)
 common_find_package_post()
+
+if(NOT Qt5Quick_VERSION VERSION_LESS 5.5)
+  option(DEFLECT_QMLSTREAMER_MULTITHREADED "Use multithreaded-rendering in QMLStreamer" ON)
+endif()
 
 add_subdirectory(deflect)
 add_subdirectory(apps)

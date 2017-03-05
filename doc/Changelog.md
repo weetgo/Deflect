@@ -1,16 +1,48 @@
 Changelog {#Changelog}
 ============
 
+## Deflect 0.13 (git master)
+
+* [152](https://github.com/BlueBrain/Deflect/pull/152):
+  Changed coding style of the project to conform to new .clang-format rules.
+* [148](https://github.com/BlueBrain/Deflect/pull/148):
+  Support for streaming stereo 3D content in a frame-sequential manner.
+
 ## Deflect 0.12
 
-### 0.12.0 (git master)
+### 0.12.1 (01-02-2017)
 
-* [130](https://github.com/BlueBrain/Deflect/pull/130)
+* [147](https://github.com/BlueBrain/Deflect/pull/147):
+  Improved handling of network protocol updates. Future updates should be
+  possible without breaking any client/server based on this release.
+  Deflect server: better reporting of JPEG decompression errors.
+* [146](https://github.com/BlueBrain/Deflect/pull/146):
+  Unified the command line options and help message of applications.
+* [145](https://github.com/BlueBrain/Deflect/pull/145):
+  DesktopStreamer: new slider to adjust the JPEG quality in advanced settings.
+
+### 0.12.0 (09-12-2016)
+
+* [143](https://github.com/BlueBrain/Deflect/pull/143):
+  The non-functional Servus dependency has been removed.
+* [142](https://github.com/BlueBrain/Deflect/pull/142):
+  The DesktopStreamer app uses the full user name as the default stream name.
+* [139](https://github.com/BlueBrain/Deflect/pull/139):
+  OSX: AppNap is now disabled for all QmlStreamers. The AppNapSuspender class
+  is also available in Deflect library for use in external applications.
+* [137](https://github.com/BlueBrain/Deflect/pull/137):
+  Deflect Qt: the offscreen Qml view used by the Qml streamer is available as a
+  separate class.
+* [133](https://github.com/BlueBrain/Deflect/pull/133):
+  QmlStreamer: Use asynchronous rendering, add
+  deflect::qt::QmlStreamer::useAsyncSend() to enable asynchronous image streaming
+  (off by default).
+* [130](https://github.com/BlueBrain/Deflect/pull/130):
   Replaced boost by C++11. Boost is now an optional dependency and it is used
   only by the tests. Some API changes were introduced by this change.
-* [129](https://github.com/BlueBrain/Deflect/pull/129)
+* [129](https://github.com/BlueBrain/Deflect/pull/129):
   Cleared Deflect from boost::serialization that was used exclusively by Tide.
-* [128](https://github.com/BlueBrain/Deflect/pull/128)
+* [128](https://github.com/BlueBrain/Deflect/pull/128):
   New events for transmitting all touch points in addition to existing gestures:
   - Gives the ability to handle more than one touch point in applications (e.g.
     draw with multiple fingers on a whiteboard).
@@ -22,7 +54,7 @@ Changelog {#Changelog}
   - A new *pinch* event was added. Clients of Tide >= 1.2 have to adapt their
     code to use it instead of *wheel* events, which are no longer sent.
   - Minor additions to the simplestreamer demo application.
-* [126](https://github.com/BlueBrain/Deflect/pull/126)
+* [126](https://github.com/BlueBrain/Deflect/pull/126):
   DesktopStreamer: The list of default hosts can be configured using the CMake
   variable DEFLECT_DESKTOPSTREAMER_HOSTS.
 * [124](https://github.com/BlueBrain/Deflect/pull/124):

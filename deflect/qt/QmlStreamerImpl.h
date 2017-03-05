@@ -38,119 +38,100 @@
 /* or implied, of The University of Texas at Austin.                 */
 /*********************************************************************/
 
-#ifndef QMLSTREAMERIMPL_H
-#define QMLSTREAMERIMPL_H
+#ifndef DELFECT_QT_QMLSTREAMERIMPL_H
+#define DELFECT_QT_QMLSTREAMERIMPL_H
 
+#include <QImage>
+#include <QObject>
+#include <QThread>
 #include <QTimer>
-#include <QWindow>
 
-#include "QmlStreamer.h"
 #include "../SizeHints.h"
+#include "OffscreenQuickView.h"
+#include "QmlStreamer.h"
 
-QT_FORWARD_DECLARE_CLASS(QOpenGLContext)
-QT_FORWARD_DECLARE_CLASS(QOpenGLFramebufferObject)
-QT_FORWARD_DECLARE_CLASS(QOffscreenSurface)
-QT_FORWARD_DECLARE_CLASS(QQuickRenderControl)
-QT_FORWARD_DECLARE_CLASS(QQuickWindow)
-QT_FORWARD_DECLARE_CLASS(QQmlEngine)
-QT_FORWARD_DECLARE_CLASS(QQmlComponent)
-QT_FORWARD_DECLARE_CLASS(QQuickItem)
+#ifdef __APPLE__
+#include <deflect/AppNapSuspender.h>
+#endif
+#include <deflect/Stream.h>
 
 namespace deflect
 {
-
-class Stream;
-
 namespace qt
 {
-
 class EventReceiver;
 class QmlGestures;
 class TouchInjector;
 
-class QmlStreamer::Impl : public QWindow
+class QmlStreamer::Impl : public QObject
 {
     Q_OBJECT
 
 public:
-    Impl( const QString& qmlFile, const std::string& streamHost,
-          const std::string& streamId );
-
+    Impl(const QString& qmlFile, const std::string& streamHost,
+         const std::string& streamId);
     ~Impl();
 
-    QQuickItem* getRootItem() { return _rootItem; }
-    QQmlEngine* getQmlEngine() { return _qmlEngine; }
-    Stream* getStream() { return _stream; }
-
-protected:
-    void resizeEvent( QResizeEvent* e ) final;
-    void mousePressEvent( QMouseEvent* e ) final;
-    void mouseReleaseEvent( QMouseEvent* e ) final;
-    void timerEvent( QTimerEvent* e ) final;
-
-private slots:
-    bool _setupRootItem();
-
-    void _createFbo();
-    void _destroyFbo();
-    void _render();
-    void _requestRender();
-
-    void _onPressed( QPointF position );
-    void _onReleased( QPointF position );
-    void _onMoved( QPointF position );
-
-    void _onResized( QSize newSize );
-
-    void _onKeyPress( int key, int modifiers, QString text );
-    void _onKeyRelease( int key, int modifiers, QString text );
-
+    void useAsyncSend(const bool async) { _asyncSend = async; }
+    QQuickItem* getRootItem() { return _quickView->getRootItem(); }
+    QQmlEngine* getQmlEngine() { return _quickView->getEngine(); }
+    Stream* getStream() { return _stream.get(); }
 signals:
     void streamClosed();
 
+private slots:
+    void _afterRender(QImage image);
+
+    void _onPressed(QPointF position);
+    void _onReleased(QPointF position);
+    void _onMoved(QPointF position);
+
+    void _onKeyPress(int key, int modifiers, QString text);
+    void _onKeyRelease(int key, int modifiers, QString text);
+
+    void _onStreamClosed();
+
 private:
-    void _send( QKeyEvent& keyEvent );
-    bool _sendToWebengineviewItems( QKeyEvent& keyEvent );
+    void _setupSizeHintsConnections();
+    void _send(QKeyEvent& keyEvent);
+    bool _sendToWebengineviewItems(QKeyEvent& keyEvent);
     std::string _getDeflectStreamIdentifier() const;
     bool _setupDeflectStream();
-    void _updateSizes( const QSize& size );
 
     void _connectTouchInjector();
-    void _startMouseModeSwitchDetection( const QPointF& pos );
+    void _setupMouseModeSwitcher();
+    void _startMouseModeSwitchDetection(const QPointF& pos);
     bool _touchIsTapAndHold();
     void _switchFromTouchToMouseMode();
     void _switchBackToTouchMode();
-    void _sendMouseEvent( QEvent::Type eventType, const QPointF& pos );
+    void _sendMouseEvent(QEvent::Type eventType, const QPointF& pos);
 
-    QPointF _mapToScene( const QPointF& normalizedPos ) const;
+    QPointF _mapToScene(const QPointF& normalizedPos) const;
 
-    QOpenGLContext* _context;
-    QOffscreenSurface* _offscreenSurface;
-    QQuickRenderControl* _renderControl;
-    QQuickWindow* _quickWindow;
-    QQmlEngine* _qmlEngine;
-    QQmlComponent* _qmlComponent;
-    QQuickItem* _rootItem;
-    QOpenGLFramebufferObject* _fbo;
+    std::unique_ptr<OffscreenQuickView> _quickView;
 
-    int _renderTimer;
-    int _stopRenderingDelayTimer;
+    std::unique_ptr<Stream> _stream;
+    std::unique_ptr<EventReceiver> _eventReceiver;
+    std::unique_ptr<QmlGestures> _qmlGestures;
+    std::unique_ptr<TouchInjector> _touchInjector;
 
-    Stream* _stream;
-    EventReceiver* _eventHandler;
-    QmlGestures* _qmlGestures;
-    TouchInjector* _touchInjector;
-    bool _streaming;
     const std::string _streamHost;
     const std::string _streamId;
     SizeHints _sizeHints;
 
+    bool _asyncSend{false};
+    Stream::Future _sendFuture;
+    QImage _image;
+
     QTimer _mouseModeTimer;
-    bool _mouseMode;
+    bool _mouseMode{false};
     QPointF _touchStartPos;
     QPointF _touchCurrentPos;
-};
 
+#ifdef __APPLE__
+    AppNapSuspender _napSuspender;
+#endif
+};
 }
 }
 
